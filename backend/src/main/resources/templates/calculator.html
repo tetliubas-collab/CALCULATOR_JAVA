@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Калькулятор</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #e2e8f0;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .calculator {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 28px;
+            width: 360px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .display {
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+
+        .expression {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            min-height: 18px;
+            word-break: break-all;
+            text-align: right;
+        }
+
+        .main-display {
+            color: #f1f5f9;
+            font-size: 2.2rem;
+            font-weight: 300;
+            word-break: break-all;
+            text-align: right;
+            id: "mainDisplay";
+        }
+
+        .error-display {
+            color: #f87171;
+            font-size: 1rem;
+            text-align: right;
+        }
+
+        .history {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .history-title {
+            color: #475569;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .history-item {
+            color: #64748b;
+            font-size: 0.78rem;
+            padding: 2px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 18px 10px;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            outline: none;
+        }
+
+        button:active { transform: scale(0.94); }
+
+        .btn-number {
+            background: #334155;
+            color: #f1f5f9;
+        }
+        .btn-number:hover { background: #3d4f66; }
+
+        .btn-op {
+            background: #1d4ed8;
+            color: #fff;
+        }
+        .btn-op:hover { background: #2563eb; }
+
+        .btn-fn {
+            background: #0f766e;
+            color: #fff;
+        }
+        .btn-fn:hover { background: #0d9488; }
+
+        .btn-clear {
+            background: #b91c1c;
+            color: #fff;
+        }
+        .btn-clear:hover { background: #dc2626; }
+
+        .btn-equals {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #fff;
+            grid-column: span 2;
+        }
+        .btn-equals:hover { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+
+        .btn-zero { grid-column: span 2; }
+
+        .badge {
+            display: inline-block;
+            background: #1d4ed8;
+            color: #bfdbfe;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>☕ Java Калькулятор</h1>
+<span class="badge">Spring Boot · Port 3000</span>
+
+<div class="calculator" id="calculator">
+    <div class="display">
+        <div class="expression" id="expression"></div>
+        <div class="main-display" id="mainDisplay">0</div>
+    </div>
+
+    <div class="history" id="historyBlock">
+        <div class="history-title">Історія</div>
+        <div id="historyList"></div>
+    </div>
+
+    <div class="buttons">
+        <button class="btn-clear" onclick="clearAll()" id="btnClear">AC</button>
+        <button class="btn-fn"    onclick="toggleSign()" id="btnToggle">+/-</button>
+        <button class="btn-fn"    onclick="sqrtOp()" id="btnSqrt">√</button>
+        <button class="btn-op"    onclick="setOp('divide')" id="btnDivide">÷</button>
+
+        <button class="btn-number" onclick="appendNum('7')" id="btn7">7</button>
+        <button class="btn-number" onclick="appendNum('8')" id="btn8">8</button>
+        <button class="btn-number" onclick="appendNum('9')" id="btn9">9</button>
+        <button class="btn-op"    onclick="setOp('multiply')" id="btnMultiply">×</button>
+
+        <button class="btn-number" onclick="appendNum('4')" id="btn4">4</button>
+        <button class="btn-number" onclick="appendNum('5')" id="btn5">5</button>
+        <button class="btn-number" onclick="appendNum('6')" id="btn6">6</button>
+        <button class="btn-op"    onclick="setOp('subtract')" id="btnSubtract">−</button>
+
+        <button class="btn-number" onclick="appendNum('1')" id="btn1">1</button>
+        <button class="btn-number" onclick="appendNum('2')" id="btn2">2</button>
+        <button class="btn-number" onclick="appendNum('3')" id="btn3">3</button>
+        <button class="btn-op"    onclick="setOp('add')" id="btnAdd">+</button>
+
+        <button class="btn-number btn-zero" onclick="appendNum('0')" id="btn0">0</button>
+        <button class="btn-number" onclick="appendDot()" id="btnDot">.</button>
+        <button class="btn-fn"    onclick="setOp('power')" id="btnPower">xʸ</button>
+
+        <button class="btn-fn"    onclick="setOp('modulo')" id="btnModulo">%</button>
+        <button class="btn-clear" onclick="backspace()" id="btnBack">⌫</button>
+        <button class="btn-equals" onclick="calculate()" id="btnEquals">=</button>
+    </div>
+</div>
+
+<script>
+    let current = '0';
+    let previous = null;
+    let operation = null;
+    let shouldReset = false;
+    const history = [];
+
+    function updateDisplay(value, expr = '') {
+        document.getElementById('mainDisplay').textContent = value;
+        document.getElementById('expression').textContent = expr;
+    }
+
+    function appendNum(num) {
+        if (shouldReset) { current = num; shouldReset = false; }
+        else current = current === '0' ? num : current + num;
+        updateDisplay(current);
+    }
+
+    function appendDot() {
+        if (shouldReset) { current = '0.'; shouldReset = false; }
+        else if (!current.includes('.')) current += '.';
+        updateDisplay(current);
+    }
+
+    function setOp(op) {
+        if (previous !== null && operation && !shouldReset) {
+            compute(false);
+        }
+        operation = op;
+        previous = parseFloat(current);
+        shouldReset = true;
+        const symbols = { add:'+', subtract:'−', multiply:'×', divide:'÷', modulo:'%', power:'^' };
+        updateDisplay(current, previous + ' ' + (symbols[op] || op));
+    }
+
+    function clearAll() {
+        current = '0'; previous = null; operation = null; shouldReset = false;
+        updateDisplay('0', '');
+    }
+
+    function backspace() {
+        if (current.length > 1) current = current.slice(0, -1);
+        else current = '0';
+        updateDisplay(current);
+    }
+
+    function toggleSign() {
+        current = String(parseFloat(current) * -1);
+        updateDisplay(current);
+    }
+
+    async function sqrtOp() {
+        const a = parseFloat(current);
+        const res = await fetch('/api/calculate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ a, b: 0, operation: 'sqrt' })
+        });
+        const data = await res.json();
+        handleResult(data);
+    }
+
+    async function compute(final = true) {
+        if (!operation || previous === null) return;
+        const a = previous;
+        const b = parseFloat(current);
+        const res = await fetch('/api/calculate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ a, b, operation })
+        });
+        const data = await res.json();
+        if (final) handleResult(data);
+        else {
+            if (!data.error) { current = String(data.result); previous = data.result; }
+        }
+    }
+
+    function handleResult(data) {
+        if (data.error) {
+            document.getElementById('mainDisplay').innerHTML =
+                '<span class="error-display">' + data.errorMessage + '</span>';
+            document.getElementById('expression').textContent = '';
+        } else {
+            current = String(data.result);
+            updateDisplay(current, data.expression);
+            addHistory(data.expression);
+        }
+        operation = null; previous = null; shouldReset = true;
+    }
+
+    function addHistory(expr) {
+        history.unshift(expr);
+        if (history.length > 5) history.pop();
+        const list = document.getElementById('historyList');
+        list.innerHTML = history.map(h => `<div class="history-item">${h}</div>`).join('');
+    }
+
+    async function calculate() { await compute(true); }
+
+    document.addEventListener('keydown', e => {
+        if (e.key >= '0' && e.key <= '9') appendNum(e.key);
+        else if (e.key === '.') appendDot();
+        else if (e.key === '+') setOp('add');
+        else if (e.key === '-') setOp('subtract');
+        else if (e.key === '*') setOp('multiply');
+        else if (e.key === '/') { e.preventDefault(); setOp('divide'); }
+        else if (e.key === '%') setOp('modulo');
+        else if (e.key === 'Enter' || e.key === '=') calculate();
+        else if (e.key === 'Backspace') backspace();
+        else if (e.key === 'Escape') clearAll();
+    });
+</script>
+</body>
+</html>
