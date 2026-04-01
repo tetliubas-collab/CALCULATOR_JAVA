@@ -1,42 +1,53 @@
 name: CI/CD Pipeline
 
+# Тригери для запуску пайплайну
 on:
+  # Запуск при push у гілки main та develop
   push:
     branches:
       - main
       - develop
+  # Запуск при створенні Pull Request
   pull_request:
     branches:
       - main
       - develop
 
 jobs:
+  # Job для збірки та тестування
   build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
+      # Крок 1: Отримання коду з репозиторію
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # Крок 2: Налаштування Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          node-version: 22   # або 24
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: Install dependencies
-        run: npm ci
+      # Крок 3: Збірка проекту та запуск тестів через Maven
+      - name: Build and run tests with Maven
+        run: mvn clean verify
 
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run unit tests
-        run: npm run test:unit
-
-      - name: Build for production
-        run: npm run build
-
-      - name: Upload build artifacts
+      # Крок 4: Публікація результатів тестів
+      - name: Publish Test Results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: dist
-          path: dist
+          name: test-results
+          path: target/surefire-reports/
+
+      # Крок 5: Завантаження зібраного JAR як артефакт
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: calculator-jar
+          path: target/*.jar
