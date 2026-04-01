@@ -1,6 +1,5 @@
 name: CI/CD Pipeline
 
-# Коли запускати пайплайн
 on:
   push:
     branches:
@@ -13,36 +12,29 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest   # середовище виконання
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. Отримати код з репозиторію
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Встановити Node.js (актуальна версія)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22   # або 24
 
-      # 3. Встановити залежності
       - name: Install dependencies
         run: npm ci
 
-      # 4. Запустити лінтер
       - name: Run linter
         run: npm run lint
 
-      # 5. Запустити юніт-тести
       - name: Run unit tests
         run: npm run test:unit
 
-      # 6. Зібрати проєкт для продакшн
       - name: Build for production
         run: npm run build
 
-      # 7. Завантажити артефакти збірки
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
